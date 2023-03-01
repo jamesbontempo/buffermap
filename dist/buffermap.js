@@ -26,7 +26,7 @@ class BufferMap {
     constructor(options) {
         _BufferMap_instances.add(this);
         // Private properties
-        _BufferMap_options.set(this, { hasher: "xxhash", seed: 0xb4b3f4f3 });
+        _BufferMap_options.set(this, { hasher: "xxhash64", seed: 0xb4b3f4f3 });
         _BufferMap_buckets.set(this, 2);
         _BufferMap_pairs.set(this, 0);
         _BufferMap_keys.set(this, 0);
@@ -60,13 +60,13 @@ class BufferMap {
     delete(key) {
         var _a, _b, _c;
         const index = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_index).call(this, key, __classPrivateFieldGet(this, _BufferMap_buckets, "f"));
-        if (__classPrivateFieldGet(this, _BufferMap_data, "f")[index] !== undefined) {
-            const subdata = __classPrivateFieldGet(this, _BufferMap_data, "f")[index];
-            const subindex = subdata.findIndex((pair) => __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, pair[0]) === __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, key));
-            if (subindex >= 0) {
-                subdata.splice(subindex, 1);
+        const keydata = __classPrivateFieldGet(this, _BufferMap_data, "f")[index];
+        if (keydata !== undefined) {
+            const keyindex = keydata.findIndex((pair) => __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, pair[0]) === __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, key));
+            if (keyindex >= 0) {
+                keydata.splice(keyindex, 1);
                 __classPrivateFieldSet(this, _BufferMap_pairs, (_a = __classPrivateFieldGet(this, _BufferMap_pairs, "f"), _a--, _a), "f");
-                if (subdata.length === 0) {
+                if (keydata.length === 0) {
                     __classPrivateFieldSet(this, _BufferMap_keys, (_b = __classPrivateFieldGet(this, _BufferMap_keys, "f"), _b--, _b), "f");
                 }
                 else {
@@ -83,11 +83,11 @@ class BufferMap {
             return;
         const length = __classPrivateFieldGet(this, _BufferMap_data, "f").length;
         for (let i = 0; i < length; i++) {
-            const subdata = __classPrivateFieldGet(this, _BufferMap_data, "f")[i];
-            if (subdata !== undefined) {
-                const sublength = subdata.length;
-                for (let j = 0; j < sublength; j++) {
-                    yield subdata[j];
+            const keydata = __classPrivateFieldGet(this, _BufferMap_data, "f")[i];
+            if (keydata !== undefined) {
+                const keydatalength = keydata.length;
+                for (let j = 0; j < keydatalength; j++) {
+                    yield keydata[j];
                 }
             }
         }
@@ -107,28 +107,34 @@ class BufferMap {
     }
     get(key) {
         const index = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_index).call(this, key, __classPrivateFieldGet(this, _BufferMap_buckets, "f"));
-        if (__classPrivateFieldGet(this, _BufferMap_data, "f")[index] !== undefined) {
-            const subdata = __classPrivateFieldGet(this, _BufferMap_data, "f")[index];
-            const subindex = subdata.findIndex((pair) => __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, pair[0]) === __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, key));
-            if (subindex >= 0) {
-                return subdata[subindex][1];
-            }
+        const keydata = __classPrivateFieldGet(this, _BufferMap_data, "f")[index];
+        if (keydata !== undefined) {
+            const keyindex = keydata.findIndex((pair) => __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, pair[0]) === __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, key));
+            if (keyindex >= 0)
+                return keydata[keyindex][1];
         }
     }
     has(key) {
         const index = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_index).call(this, key, __classPrivateFieldGet(this, _BufferMap_buckets, "f"));
-        return __classPrivateFieldGet(this, _BufferMap_data, "f")[index] !== undefined;
+        const keydata = __classPrivateFieldGet(this, _BufferMap_data, "f")[index];
+        if (keydata !== undefined) {
+            const keyindex = keydata.findIndex((pair) => __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, pair[0]) === __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, key));
+            return (keyindex >= 0) ? true : false;
+        }
+        else {
+            return false;
+        }
     }
     *keys() {
         if (__classPrivateFieldGet(this, _BufferMap_keys, "f") === 0)
             return;
         const length = __classPrivateFieldGet(this, _BufferMap_data, "f").length;
         for (let i = 0; i < length; i++) {
-            const subdata = __classPrivateFieldGet(this, _BufferMap_data, "f")[i];
-            if (subdata !== undefined) {
-                const sublength = subdata.length;
-                for (let j = 0; j < sublength; j++) {
-                    yield subdata[j][0];
+            const keydata = __classPrivateFieldGet(this, _BufferMap_data, "f")[i];
+            if (keydata !== undefined) {
+                const keydatalength = keydata.length;
+                for (let j = 0; j < keydatalength; j++) {
+                    yield keydata[j][0];
                 }
             }
         }
@@ -136,14 +142,14 @@ class BufferMap {
     set(key, value) {
         var _a, _b, _c, _d;
         const index = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_index).call(this, key, __classPrivateFieldGet(this, _BufferMap_buckets, "f"));
-        if (__classPrivateFieldGet(this, _BufferMap_data, "f")[index] !== undefined) {
-            const subdata = __classPrivateFieldGet(this, _BufferMap_data, "f")[index];
-            const subindex = subdata.findIndex((pair) => __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, pair[0]) === __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, key));
-            if (subindex >= 0) {
-                subdata[subindex][1] = value;
+        const keydata = __classPrivateFieldGet(this, _BufferMap_data, "f")[index];
+        if (keydata !== undefined) {
+            const keyindex = keydata.findIndex((pair) => __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, pair[0]) === __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, key));
+            if (keyindex >= 0) {
+                keydata[keyindex][1] = value;
             }
             else {
-                subdata.push([key, value]);
+                keydata.push([key, value]);
                 __classPrivateFieldSet(this, _BufferMap_pairs, (_a = __classPrivateFieldGet(this, _BufferMap_pairs, "f"), _a++, _a), "f");
                 __classPrivateFieldSet(this, _BufferMap_collisions, (_b = __classPrivateFieldGet(this, _BufferMap_collisions, "f"), _b++, _b), "f");
             }
@@ -168,11 +174,11 @@ class BufferMap {
             return;
         const length = __classPrivateFieldGet(this, _BufferMap_data, "f").length;
         for (let i = 0; i < length; i++) {
-            const subdata = __classPrivateFieldGet(this, _BufferMap_data, "f")[i];
-            if (subdata !== undefined) {
-                const sublength = subdata.length;
-                for (let j = 0; j < sublength; j++) {
-                    yield subdata[j][1];
+            const keydata = __classPrivateFieldGet(this, _BufferMap_data, "f")[i];
+            if (keydata !== undefined) {
+                const keydatalength = keydata.length;
+                for (let j = 0; j < keydatalength; j++) {
+                    yield keydata[j][1];
                 }
             }
         }
@@ -193,6 +199,9 @@ _BufferMap_options = new WeakMap(), _BufferMap_buckets = new WeakMap(), _BufferM
         else {
             buffer.writeInt32BE(key);
         }
+    }
+    else if (type === "null" || type === "undefined") {
+        buffer = node_buffer_1.Buffer.from("\0", "binary");
     }
     else {
         buffer = node_buffer_1.Buffer.from(key);
@@ -215,10 +224,10 @@ _BufferMap_options = new WeakMap(), _BufferMap_buckets = new WeakMap(), _BufferM
     const hash = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hash).call(this, key);
     const int = parseInt(hash, 16);
     return int & (size - 1);
-}, _BufferMap_rehash = function _BufferMap_rehash(newBuckets) {
-    let newKeys = 0;
-    let newCollisions = 0;
-    const newData = new Array(newBuckets);
+}, _BufferMap_rehash = function _BufferMap_rehash(newbuckets) {
+    let newkeys = 0;
+    let newcollisions = 0;
+    const newdata = new Array(newbuckets);
     const buckets = __classPrivateFieldGet(this, _BufferMap_buckets, "f");
     for (let i = 0; i < buckets; i++) {
         const data = __classPrivateFieldGet(this, _BufferMap_data, "f")[i];
@@ -227,22 +236,22 @@ _BufferMap_options = new WeakMap(), _BufferMap_buckets = new WeakMap(), _BufferM
             for (let j = 0; j < length; j++) {
                 const pair = data[j];
                 const key = pair[0];
-                const index = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_index).call(this, key, newBuckets);
-                if (newData[index] !== undefined) {
-                    newCollisions++;
-                    newData[index].push(pair);
+                const index = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_index).call(this, key, newbuckets);
+                if (newdata[index] !== undefined) {
+                    newcollisions++;
+                    newdata[index].push(pair);
                 }
                 else {
-                    newKeys++;
-                    newData[index] = [pair];
+                    newkeys++;
+                    newdata[index] = [pair];
                 }
             }
         }
     }
-    __classPrivateFieldSet(this, _BufferMap_buckets, newBuckets, "f");
-    __classPrivateFieldSet(this, _BufferMap_keys, newKeys, "f");
-    __classPrivateFieldSet(this, _BufferMap_collisions, newCollisions, "f");
-    __classPrivateFieldSet(this, _BufferMap_data, newData, "f");
+    __classPrivateFieldSet(this, _BufferMap_buckets, newbuckets, "f");
+    __classPrivateFieldSet(this, _BufferMap_keys, newkeys, "f");
+    __classPrivateFieldSet(this, _BufferMap_collisions, newcollisions, "f");
+    __classPrivateFieldSet(this, _BufferMap_data, newdata, "f");
 }, _BufferMap_sha256 = function _BufferMap_sha256(key) {
     const hex = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, key);
     return (0, sha256_1.default)(hex).toString().substring(0, 13);
@@ -251,7 +260,7 @@ _BufferMap_options = new WeakMap(), _BufferMap_buckets = new WeakMap(), _BufferM
     if (type !== "object") {
         return type;
     }
-    else if (type === null) {
+    else if (key === null) {
         return "null";
     }
     else {

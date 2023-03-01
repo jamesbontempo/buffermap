@@ -9,7 +9,7 @@ export class BufferMap {
 
     // Private properties
 
-    #options: Record<string, any> = {hasher: "xxhash", seed: 0xb4b3f4f3};
+    #options: Record<string, any> = {hasher: "xxhash64", seed: 0xb4b3f4f3};
     #buckets: number = 2;
     #pairs: number = 0;
     #keys: number = 0;
@@ -52,13 +52,13 @@ export class BufferMap {
     
     delete(key: any): void {
         const index: number = this.#index(key, this.#buckets);
-        if (this.#data[index] !== undefined) {
-            const subdata: Array<any> = this.#data[index];
-            const subindex: number = subdata.findIndex((pair: Array<any>) => this.#hex(pair[0]) === this.#hex(key));
-            if (subindex >= 0) {
-                subdata.splice(subindex, 1);
+        const keydata: Array<any> = this.#data[index];
+        if (keydata !== undefined) {
+            const keyindex: number = keydata.findIndex((pair: Array<any>) => this.#hex(pair[0]) === this.#hex(key));
+            if (keyindex >= 0) {
+                keydata.splice(keyindex, 1);
                 this.#pairs--;
-                if (subdata.length === 0) {
+                if (keydata.length === 0) {
                     this.#keys--;
                 } else {
                     this.#collisions--;
@@ -74,11 +74,11 @@ export class BufferMap {
         if (this.#keys === 0) return;
         const length: number = this.#data.length;
         for (let i = 0; i < length; i++) {
-            const subdata: Array<any> = this.#data[i];
-            if (subdata !== undefined) {
-                const sublength: number = subdata.length;
-                for (let j = 0; j < sublength; j++) {
-                    yield subdata[j];
+            const keydata: Array<any> = this.#data[i];
+            if (keydata !== undefined) {
+                const keydatalength: number = keydata.length;
+                for (let j = 0; j < keydatalength; j++) {
+                    yield keydata[j];
                 }
             }
         }
@@ -99,29 +99,33 @@ export class BufferMap {
 
     get(key: any): any {
         const index: number = this.#index(key, this.#buckets);
-        if (this.#data[index] !== undefined) {
-            const subdata: Array<any> = this.#data[index];
-            const subindex: number = subdata.findIndex((pair: Array<any>) => this.#hex(pair[0]) === this.#hex(key));
-            if (subindex >= 0) {
-                return subdata[subindex][1];
-            }  
+        const keydata: Array<any> = this.#data[index];
+        if (keydata !== undefined) {
+            const keyindex: number = keydata.findIndex((pair: Array<any>) => this.#hex(pair[0]) === this.#hex(key));
+            if (keyindex >= 0) return keydata[keyindex][1];
         }
     }
 
     has(key: any) {
         const index: number = this.#index(key, this.#buckets);
-        return this.#data[index] !== undefined;
+        const keydata: Array<any> = this.#data[index];
+        if (keydata !== undefined) {
+            const keyindex: number = keydata.findIndex((pair: Array<any>) => this.#hex(pair[0]) === this.#hex(key));
+            return (keyindex >= 0) ? true : false;
+        } else {
+            return false;
+        }
     }
 
     *keys(): IterableIterator<any> {
         if (this.#keys === 0) return;
         const length:number = this.#data.length;
         for (let i = 0; i < length; i++) {
-            const subdata: Array<any> = this.#data[i];
-            if (subdata !== undefined) {
-                const sublength: number = subdata.length;
-                for (let j = 0; j < sublength; j++) {
-                    yield subdata[j][0];
+            const keydata: Array<any> = this.#data[i];
+            if (keydata !== undefined) {
+                const keydatalength: number = keydata.length;
+                for (let j = 0; j < keydatalength; j++) {
+                    yield keydata[j][0];
                 }
             }
         }
@@ -129,13 +133,13 @@ export class BufferMap {
 
     set(key: any, value: any): void {
         const index: number = this.#index(key, this.#buckets);
-        if (this.#data[index] !== undefined) {
-            const subdata: Array<any> = this.#data[index];
-            const subindex: number = subdata.findIndex((pair: Array<any>) => this.#hex(pair[0]) === this.#hex(key));
-            if (subindex >= 0) {
-                subdata[subindex][1] = value;
+        const keydata: Array<any> = this.#data[index];
+        if (keydata !== undefined) {
+            const keyindex: number = keydata.findIndex((pair: Array<any>) => this.#hex(pair[0]) === this.#hex(key));
+            if (keyindex >= 0) {
+                keydata[keyindex][1] = value;
             } else {
-                subdata.push([key, value]);
+                keydata.push([key, value]);
                 this.#pairs++;
                 this.#collisions++;
             }
@@ -160,11 +164,11 @@ export class BufferMap {
         if (this.#keys === 0) return;
         const length: number = this.#data.length;
         for (let i = 0; i < length; i++) {
-            const subdata: Array<any> = this.#data[i];
-            if (subdata !== undefined) {
-                const sublength: number = subdata.length;
-                for (let j = 0; j < sublength; j++) {
-                    yield subdata[j][1];
+            const keydata: Array<any> = this.#data[i];
+            if (keydata !== undefined) {
+                const keydatalength: number = keydata.length;
+                for (let j = 0; j < keydatalength; j++) {
+                    yield keydata[j][1];
                 }
             }
         }
@@ -182,6 +186,8 @@ export class BufferMap {
             } else {
                 buffer.writeInt32BE(key)
             }
+        } else if (type === "null" || type === "undefined") {
+            buffer = Buffer.from("\0", "binary");
         } else {
             buffer = Buffer.from(key);
         }
@@ -213,10 +219,10 @@ export class BufferMap {
         return int & (size - 1);
     }
 
-    #rehash(newBuckets: number): void {
-        let newKeys: number = 0;
-        let newCollisions: number = 0;
-        const newData: Array<any> = new Array(newBuckets);
+    #rehash(newbuckets: number): void {
+        let newkeys: number = 0;
+        let newcollisions: number = 0;
+        const newdata: Array<any> = new Array(newbuckets);
         const buckets: number = this.#buckets;
         for (let i = 0; i < buckets; i++) {
             const data: Array<Array<any>> = this.#data[i];
@@ -225,21 +231,21 @@ export class BufferMap {
                 for (let j = 0; j < length; j++) {
                     const pair: Array<any> = data[j];
                     const key: any = pair[0];
-                    const index: number = this.#index(key, newBuckets)
-                    if (newData[index] !== undefined) {
-                        newCollisions++;
-                        newData[index].push(pair);
+                    const index: number = this.#index(key, newbuckets)
+                    if (newdata[index] !== undefined) {
+                        newcollisions++;
+                        newdata[index].push(pair);
                     } else {
-                        newKeys++;
-                        newData[index] = [pair];
+                        newkeys++;
+                        newdata[index] = [pair];
                     }
                 }
             }
         }
-        this.#buckets = newBuckets;
-        this.#keys = newKeys;
-        this.#collisions = newCollisions;
-        this.#data = newData;
+        this.#buckets = newbuckets;
+        this.#keys = newkeys;
+        this.#collisions = newcollisions;
+        this.#data = newdata;
     }
 
     #sha256(key: any): string {
@@ -251,7 +257,7 @@ export class BufferMap {
         const type: string = typeof key;
         if (type !== "object") {
             return type;
-        } else if (type === null) {
+        } else if (key === null) {
             return "null";
         } else {
             return Object.prototype.toString.call(key).slice(8,-1).toLowerCase();
