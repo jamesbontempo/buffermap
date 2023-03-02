@@ -13,14 +13,65 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _BufferMap_instances, _BufferMap_options, _BufferMap_buckets, _BufferMap_pairs, _BufferMap_keys, _BufferMap_collisions, _BufferMap_data, _BufferMap_buffer, _BufferMap_hash, _BufferMap_hex, _BufferMap_index, _BufferMap_rehash, _BufferMap_sha256, _BufferMap_type, _BufferMap_xxhash32, _BufferMap_xxhash64;
+var _BufferMap_instances, _BufferMap_options, _BufferMap_buckets, _BufferMap_pairs, _BufferMap_keys, _BufferMap_collisions, _BufferMap_data, _BufferMap_buffer, _BufferMap_hash, _BufferMap_hex, _BufferMap_index, _BufferMap_rehash, _BufferMap_sha256, _BufferMap_xxhash32, _BufferMap_xxhash64;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BufferMap = void 0;
 const node_buffer_1 = require("node:buffer");
-const node_os_1 = require("node:os");
 const bson_1 = require("bson");
 const sha256_1 = __importDefault(require("crypto-js/sha256"));
 const xxhash = require("xxhash");
+Array.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this);
+};
+BigInt.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this.toString());
+};
+BigInt64Array.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this.toString());
+};
+BigUint64Array.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this.toString());
+};
+Boolean.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this.toString());
+};
+Date.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this);
+};
+Function.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this.toString());
+    ;
+};
+Map.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(bson_1.BSON.serialize(Object.fromEntries(this.entries())));
+};
+Number.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this.toString());
+};
+Object.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(bson_1.BSON.serialize(this));
+};
+RegExp.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this.toString());
+};
+Set.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(Array.from(this.values()));
+};
+String.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this);
+};
+Symbol.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this.toString());
+};
+Uint8Array.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this);
+};
+Uint16Array.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this);
+};
+Uint32Array.prototype.toBuffer = function () {
+    return node_buffer_1.Buffer.from(this);
+};
 class BufferMap {
     // Constructor
     constructor(options) {
@@ -186,27 +237,7 @@ class BufferMap {
 }
 exports.BufferMap = BufferMap;
 _BufferMap_options = new WeakMap(), _BufferMap_buckets = new WeakMap(), _BufferMap_pairs = new WeakMap(), _BufferMap_keys = new WeakMap(), _BufferMap_collisions = new WeakMap(), _BufferMap_data = new WeakMap(), _BufferMap_instances = new WeakSet(), _BufferMap_buffer = function _BufferMap_buffer(key) {
-    const type = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_type).call(this, key);
-    let buffer;
-    if (type === "object") {
-        buffer = node_buffer_1.Buffer.from(bson_1.BSON.serialize(key));
-    }
-    else if (type === "number") {
-        buffer = node_buffer_1.Buffer.alloc(32);
-        if ((0, node_os_1.endianness)() === "LE") {
-            buffer.writeInt32LE(key);
-        }
-        else {
-            buffer.writeInt32BE(key);
-        }
-    }
-    else if (type === "null" || type === "undefined") {
-        buffer = node_buffer_1.Buffer.from("\0", "binary");
-    }
-    else {
-        buffer = node_buffer_1.Buffer.from(key);
-    }
-    return buffer;
+    return key.toBuffer();
 }, _BufferMap_hash = function _BufferMap_hash(key) {
     const hasher = __classPrivateFieldGet(this, _BufferMap_options, "f").hasher;
     switch (hasher) {
@@ -255,17 +286,6 @@ _BufferMap_options = new WeakMap(), _BufferMap_buckets = new WeakMap(), _BufferM
 }, _BufferMap_sha256 = function _BufferMap_sha256(key) {
     const hex = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_hex).call(this, key);
     return (0, sha256_1.default)(hex).toString().substring(0, 13);
-}, _BufferMap_type = function _BufferMap_type(key) {
-    const type = typeof key;
-    if (type !== "object") {
-        return type;
-    }
-    else if (key === null) {
-        return "null";
-    }
-    else {
-        return Object.prototype.toString.call(key).slice(8, -1).toLowerCase();
-    }
 }, _BufferMap_xxhash32 = function _BufferMap_xxhash32(key) {
     const buffer = __classPrivateFieldGet(this, _BufferMap_instances, "m", _BufferMap_buffer).call(this, key);
     return xxhash.hash(buffer, __classPrivateFieldGet(this, _BufferMap_options, "f").seed, "hex");

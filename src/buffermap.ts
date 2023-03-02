@@ -1,9 +1,96 @@
 import { Buffer } from "node:buffer";
-import { endianness } from "node:os";
 
 import { BSON } from "bson";
 import sha256 from "crypto-js/sha256";
 const xxhash = require("xxhash");
+
+declare global {
+    interface Array<T> { toBuffer(): Buffer }
+    interface BigInt { toBuffer(): Buffer }
+    interface BigInt64Array { toBuffer(): Buffer }
+    interface BigUint64Array { toBuffer(): Buffer }
+    interface Boolean { toBuffer(): Buffer }
+    interface Date { toBuffer(): Buffer }
+    interface Function { toBuffer(): Buffer }
+    interface Map<K, V> { toBuffer(): Buffer }
+    interface Number { toBuffer(): Buffer }
+    interface Object { toBuffer(): Buffer }
+    interface RegExp { toBuffer(): Buffer }
+    interface Set<T> { toBuffer(): Buffer }
+    interface String { toBuffer(): Buffer }
+    interface Symbol { toBuffer(): Buffer }
+    interface Uint8Array { toBuffer(): Buffer }
+    interface Uint16Array { toBuffer(): Buffer }
+    interface Uint32Array { toBuffer(): Buffer }
+}
+
+Array.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this);
+}
+
+BigInt.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this.toString());
+}
+
+BigInt64Array.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this.toString());
+}
+
+BigUint64Array.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this.toString());
+}
+
+Boolean.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this.toString());
+}
+
+Date.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this);
+}
+
+Function.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this.toString());;
+}
+
+Map.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(BSON.serialize(Object.fromEntries(this.entries())));
+}
+
+Number.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this.toString());
+}
+
+Object.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(BSON.serialize(this));
+}
+
+RegExp.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this.toString());
+}
+
+Set.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(Array.from(this.values()));
+}
+
+String.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this);
+}
+
+Symbol.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this.toString());
+}
+
+Uint8Array.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this);
+}
+
+Uint16Array.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this);
+}
+
+Uint32Array.prototype.toBuffer = function(): Buffer {
+    return Buffer.from(this);
+}
 
 export class BufferMap {
 
@@ -174,27 +261,11 @@ export class BufferMap {
         }
     }
 
-    #buffer(key: any): Buffer {
-        const type: string = this.#type(key);
-        let buffer: Buffer;
-        if (type === "object") {
-            buffer = Buffer.from(BSON.serialize(key));
-        } else if (type === "number") {
-            buffer = Buffer.alloc(32);
-            if (endianness() === "LE") {
-                buffer.writeInt32LE(key);
-            } else {
-                buffer.writeInt32BE(key)
-            }
-        } else if (type === "null" || type === "undefined") {
-            buffer = Buffer.from("\0", "binary");
-        } else {
-            buffer = Buffer.from(key);
-        }
-        return buffer;
-    }
-
     // Private methods
+
+    #buffer(key: any): Buffer {
+        return key.toBuffer();
+    }
 
     #hash(key: any): string {
         const hasher: string = this.#options.hasher;
@@ -251,17 +322,6 @@ export class BufferMap {
     #sha256(key: any): string {
         const hex: string = this.#hex(key);
         return sha256(hex).toString().substring(0, 13);
-    }
-
-    #type(key: any): string {
-        const type: string = typeof key;
-        if (type !== "object") {
-            return type;
-        } else if (key === null) {
-            return "null";
-        } else {
-            return Object.prototype.toString.call(key).slice(8,-1).toLowerCase();
-        }
     }
 
     #xxhash32(key: any): string {
