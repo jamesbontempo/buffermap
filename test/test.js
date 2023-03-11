@@ -3,6 +3,7 @@ const { BufferMap } = require("../dist/buffermap.js");
 const expect = require("chai").expect;
 
 const map = new BufferMap({hasher: "xxhash32"});
+const count = 10000;
 
 const data = {
     array: [255, "128", null, undefined],
@@ -11,19 +12,33 @@ const data = {
     biguint64array: new BigUint64Array([9007199254740993n, 90071992547409934n, 90071992547409935n]),
     boolean: true,
     date: new Date("1991-05-15T17:30:00"),
-    error: new Error("test"),
+    error: new Error("Test"),
+    evalerror: new EvalError("Test"),
+    float32array: new Float32Array([]),
+    float64array: new Float64Array([]),
     function: () => {},
     infinity: Infinity,
+    int8array: new Int8Array([128]),
+    int16array: new Int16Array([1024]),
+    int32array: new Int32Array([]),
     map: new Map([[1, "one"],[2, "two"],[3, "three"]]),
+    null: null,
     number: 12.3456789,
     object: {id: 1, first: "James", last: "BonTempo", nicknames: ["Good Times"], emoji: "😀"},
+    rangeerror: new RangeError("Test"),
+    referenceerror: new ReferenceError("Test"),
     regexp: /^$/,
     set: new Set([1, 2, 3, 4, 5]),
     string: "255",
     symbol: Symbol("foo"),
+    syntaxerror: new SyntaxError("Test"),
+    typeerror: new TypeError("Test"),
     uint8array: new Uint8Array(2),
     uint16array: new Uint16Array(3),
     uint32array: new Uint32Array(4),
+    uint8clampedarray: new Uint8ClampedArray([16]),
+    undefined: undefined,
+    urierror: new URIError("Test")
 }
 
 const types = Object.keys(data);
@@ -145,7 +160,7 @@ describe ("BufferMap tests", () => {
     });
 
     it("Inserts many more key/value pairs", () => {
-        for (let i = 0; i < 1024; i++) {
+        for (let i = 0; i < count; i++) {
             map.set(i*57, [i, String.fromCharCode(i*713)]);
         }
         expect(map.get(512*57)).to.deep.equal([512, String.fromCharCode(512*713)])
@@ -153,7 +168,7 @@ describe ("BufferMap tests", () => {
 
     it("Checks the map stats a third time", () => {
         const stats = map.stats;
-        expect(stats.pairs).to.equal(Math.floor(types.length / 2) + 1024);
+        expect(stats.pairs).to.equal(Math.floor(types.length / 2) + count);
         expect(stats.keys + stats.collisions).to.equal(stats.pairs);
         expect(stats.empty).to.equal(stats.buckets - stats.keys);
         expect(stats.efficiency).to.equal(stats.keys / stats.pairs);
