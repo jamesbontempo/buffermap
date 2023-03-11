@@ -16,62 +16,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 var _BufferMap_instances, _BufferMap_options, _BufferMap_buckets, _BufferMap_pairs, _BufferMap_keys, _BufferMap_collisions, _BufferMap_data, _BufferMap_buffer, _BufferMap_hash, _BufferMap_hex, _BufferMap_index, _BufferMap_rehash, _BufferMap_sha256, _BufferMap_xxhash32, _BufferMap_xxhash64;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BufferMap = void 0;
-const node_buffer_1 = require("node:buffer");
-const bson_1 = require("bson");
+const bsonx_1 = require("@jamesbontempo/bsonx");
 const sha256_1 = __importDefault(require("crypto-js/sha256"));
 const xxhash = require("xxhash");
-Array.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this);
-};
-BigInt.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this.toString());
-};
-BigInt64Array.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this.toString());
-};
-BigUint64Array.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this.toString());
-};
-Boolean.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this.toString());
-};
-Date.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this);
-};
-Function.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this.toString());
-    ;
-};
-Map.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(bson_1.BSON.serialize(Object.fromEntries(this.entries())));
-};
-Number.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this.toString());
-};
-Object.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(bson_1.BSON.serialize(this));
-};
-RegExp.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this.toString());
-};
-Set.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(Array.from(this.values()));
-};
-String.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this);
-};
-Symbol.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this.toString());
-};
-Uint8Array.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this);
-};
-Uint16Array.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this);
-};
-Uint32Array.prototype.toBuffer = function () {
-    return node_buffer_1.Buffer.from(this);
-};
 class BufferMap {
     // Constructor
     constructor(options) {
@@ -237,7 +184,7 @@ class BufferMap {
 }
 exports.BufferMap = BufferMap;
 _BufferMap_options = new WeakMap(), _BufferMap_buckets = new WeakMap(), _BufferMap_pairs = new WeakMap(), _BufferMap_keys = new WeakMap(), _BufferMap_collisions = new WeakMap(), _BufferMap_data = new WeakMap(), _BufferMap_instances = new WeakSet(), _BufferMap_buffer = function _BufferMap_buffer(key) {
-    return key.toBuffer();
+    return bsonx_1.BSONX.serialize(key);
 }, _BufferMap_hash = function _BufferMap_hash(key) {
     const hasher = __classPrivateFieldGet(this, _BufferMap_options, "f").hasher;
     switch (hasher) {

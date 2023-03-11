@@ -1,96 +1,7 @@
 import { Buffer } from "node:buffer";
-
-import { BSON } from "bson";
+import { BSONX } from "@jamesbontempo/bsonx";
 import sha256 from "crypto-js/sha256";
 const xxhash = require("xxhash");
-
-declare global {
-    interface Array<T> { toBuffer(): Buffer }
-    interface BigInt { toBuffer(): Buffer }
-    interface BigInt64Array { toBuffer(): Buffer }
-    interface BigUint64Array { toBuffer(): Buffer }
-    interface Boolean { toBuffer(): Buffer }
-    interface Date { toBuffer(): Buffer }
-    interface Function { toBuffer(): Buffer }
-    interface Map<K, V> { toBuffer(): Buffer }
-    interface Number { toBuffer(): Buffer }
-    interface Object { toBuffer(): Buffer }
-    interface RegExp { toBuffer(): Buffer }
-    interface Set<T> { toBuffer(): Buffer }
-    interface String { toBuffer(): Buffer }
-    interface Symbol { toBuffer(): Buffer }
-    interface Uint8Array { toBuffer(): Buffer }
-    interface Uint16Array { toBuffer(): Buffer }
-    interface Uint32Array { toBuffer(): Buffer }
-}
-
-Array.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this);
-}
-
-BigInt.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this.toString());
-}
-
-BigInt64Array.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this.toString());
-}
-
-BigUint64Array.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this.toString());
-}
-
-Boolean.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this.toString());
-}
-
-Date.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this);
-}
-
-Function.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this.toString());;
-}
-
-Map.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(BSON.serialize(Object.fromEntries(this.entries())));
-}
-
-Number.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this.toString());
-}
-
-Object.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(BSON.serialize(this));
-}
-
-RegExp.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this.toString());
-}
-
-Set.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(Array.from(this.values()));
-}
-
-String.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this);
-}
-
-Symbol.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this.toString());
-}
-
-Uint8Array.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this);
-}
-
-Uint16Array.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this);
-}
-
-Uint32Array.prototype.toBuffer = function(): Buffer {
-    return Buffer.from(this);
-}
 
 export class BufferMap {
 
@@ -264,7 +175,7 @@ export class BufferMap {
     // Private methods
 
     #buffer(key: any): Buffer {
-        return key.toBuffer();
+        return BSONX.serialize(key);
     }
 
     #hash(key: any): string {

@@ -11,6 +11,7 @@ const data = {
     biguint64array: new BigUint64Array([9007199254740993n, 90071992547409934n, 90071992547409935n]),
     boolean: true,
     date: new Date("1991-05-15T17:30:00"),
+    error: new Error("test"),
     function: () => {},
     infinity: Infinity,
     map: new Map([[1, "one"],[2, "two"],[3, "three"]]),
@@ -25,51 +26,46 @@ const data = {
     uint32array: new Uint32Array(4),
 }
 
+const types = Object.keys(data);
+
 describe ("BufferMap tests", () => {
 
     it("Inserts multiple key/value pairs", () => {
-        const types = Object.keys(data);
         for (const type of types) {
             const key = data[type];
             map.set(key, key);
         }
         const stats = map.stats;
-        expect(map.size).to.equal(Object.keys(data).length);
+        expect(map.size).to.equal(types.length);
     });
 
+    it("Retrieves the values for the different key types", () => {
+        for (const type of types) {
+            expect(map.get(data[type])).to.equal(data[type]);
+        }
+    });
     
     it("Checks the map stats", () => {
         const stats = map.stats;
-        expect(stats.pairs).to.equal(Object.keys(data).length);
+        expect(stats.pairs).to.equal(types.length);
         expect(stats.keys + stats.collisions).to.equal(stats.pairs);
         expect(stats.empty).to.equal(stats.buckets - stats.keys);
         expect(stats.efficiency).to.equal(stats.keys / stats.pairs);
         expect(stats.load).to.equal(stats.pairs / stats.keys);
         expect(stats.pairs).to.be.lessThanOrEqual(stats.buckets * 0.75);
         expect(stats.pairs).to.be.greaterThanOrEqual(stats.buckets * 0.25);
-    });
-
-    
+    });    
 
     it("Inserts the same key/value pairs again", () => {
-        const types = Object.keys(data);
         for (const type of types) {
             const key = data[type];
             map.set(key, key);
         }
         const stats = map.stats;
-        expect(map.size).to.equal(Object.keys(data).length);
-    });
-
-    it("Retrieves the values for the different key types", () => {
-        const types = Object.keys(data);
-        for (const type of types) {
-            expect(map.get(data[type])).to.equal(data[type]);
-        }
+        expect(map.size).to.equal(types.length);
     });
 
     it("Considers two equal objects as the same key", () => {
-        const types = Object.keys(data);
         for (const type of types) {
             const o1 = map.get(data[type]);
             const o2 = map.get(data[type]);
@@ -99,7 +95,7 @@ describe ("BufferMap tests", () => {
         for (const key of keys) {
             expect(Object.values(data)).to.include(key);
         }
-        expect(keys.length).to.equal(Object.keys(data).length);
+        expect(keys.length).to.equal(types.length);
     });
 
     it("Accesses the values iterator", () => {
@@ -107,7 +103,7 @@ describe ("BufferMap tests", () => {
         for (const value of values) {
             expect(Object.values(data)).to.include(value);
         }
-        expect(values.length).to.equal(Object.keys(data).length);
+        expect(values.length).to.equal(types.length);
     });
 
     it("Accesses the entries iterator", () => {
@@ -116,7 +112,7 @@ describe ("BufferMap tests", () => {
             expect(Object.values(data)).to.include(entry[0]);
             expect(Object.values(data)).to.include(entry[1]);
         }
-        expect(entries.length).to.equal(Object.keys(data).length);
+        expect(entries.length).to.equal(types.length);
     });
 
     it("Uses the forEach method", () => {
@@ -127,20 +123,19 @@ describe ("BufferMap tests", () => {
             count++;
         });
         expect(count).to.equal(map.size);
-        expect(count).to.equal(Object.keys(data).length);
+        expect(count).to.equal(types.length);
     });
 
     it("Deletes half of the keys/value pairs", () => {
-        const types = Object.keys(data);
         for (let i = 0; i < types.length / 2; i++) {
             map.delete(data[types[i]]);
         }
-        expect(map.size).to.be.lessThanOrEqual(Object.keys(data).length / 2);
+        expect(map.size).to.be.lessThanOrEqual(types.length / 2);
     });
 
     it("Checks the map stats again", () => {
         const stats = map.stats;
-        expect(stats.pairs).to.be.lessThanOrEqual(Object.keys(data).length / 2);
+        expect(stats.pairs).to.be.lessThanOrEqual(types.length / 2);
         expect(stats.keys + stats.collisions).to.equal(stats.pairs);
         expect(stats.empty).to.equal(stats.buckets - stats.keys);
         expect(stats.efficiency).to.equal(stats.keys / stats.pairs);
@@ -150,14 +145,15 @@ describe ("BufferMap tests", () => {
     });
 
     it("Inserts many more key/value pairs", () => {
-        for (let i = 0; i <512; i++) {
+        for (let i = 0; i < 1024; i++) {
             map.set(i*57, [i, String.fromCharCode(i*713)]);
         }
+        expect(map.get(512*57)).to.deep.equal([512, String.fromCharCode(512*713)])
     });
 
     it("Checks the map stats a third time", () => {
         const stats = map.stats;
-        expect(stats.pairs).to.equal(Math.floor(Object.keys(data).length / 2) + 512);
+        expect(stats.pairs).to.equal(Math.floor(types.length / 2) + 1024);
         expect(stats.keys + stats.collisions).to.equal(stats.pairs);
         expect(stats.empty).to.equal(stats.buckets - stats.keys);
         expect(stats.efficiency).to.equal(stats.keys / stats.pairs);
